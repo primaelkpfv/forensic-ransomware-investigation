@@ -1,0 +1,55 @@
+# IOCs — Investigation Forensique Ransomware
+# Projet: ESAIP Bachelor Cybersécurité 2025
+# Auteur: Fèmi KPONOU
+
+metadata:
+  date: "2025-03-15"
+  analyst: "Fèmi KPONOU"
+  case_id: "ESAIP-IR-2025-001"
+  tlp: "WHITE"
+
+network:
+  ips_c2:
+    - "185.234.xxx.xxx"    # C2 Server (TOR exit node)
+    - "91.108.xxx.xxx"     # Exfiltration endpoint
+  domains:
+    - "update-windows[.]xyz"
+    - "cdn-delivery[.]ru"
+  urls:
+    - "http://update-windows[.]xyz/cdn/update.exe"
+    - "http://cdn-delivery[.]ru/exfil/upload.php"
+
+files:
+  dropper:
+    name: "facture_2025.docm"
+    md5: "a1b2c3d4e5f6789012345678901234ab"
+    sha256: "e3b0c44298fc1c149afb4c8996fb924..."
+    path: "C:\\Users\\jean.dupont\\Downloads\\"
+    type: "Office Document with Macro"
+  payload:
+    name: "update.exe"
+    md5: "deadbeefcafe12345678901234567890"
+    path: "C:\\Users\\Public\\"
+    type: "PE32 Executable (Ransomware)"
+  persistence:
+    name: "svchost32.exe"
+    path: "C:\\Users\\Public\\"
+    type: "PE32 Executable (Backdoor)"
+
+registry:
+  persistence:
+    - key: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      value: "WindowsUpdate"
+      data: "C:\\Users\\Public\\svchost32.exe"
+  shadow_copy_deletion:
+    - key: "HKLM\\SYSTEM\\CurrentControlSet\\Services\\VSS"
+      action: "disabled"
+
+mutex:
+  - "Global\\MutexRansomLock2025"
+  - "Global\\SingleInstanceMutex"
+
+encryption:
+  algorithm: "AES-256"
+  extension: ".locked"
+  ransom_note: "README_DECRYPT.txt"
