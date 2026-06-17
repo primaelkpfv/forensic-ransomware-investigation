@@ -1,0 +1,11 @@
+type,value,description,confidence,tlp
+md5,a3f2c1d4e5f6a7b8c9d0e1f2a3b4c5d6,Hash dropper initial (Facture_2024_urgent.pdf.exe),HIGH,RED
+sha256,7b9e4d2f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5,Hash ransomware payload,HIGH,RED
+ip,185.220.101.45,C2 server - Tor exit node,HIGH,RED
+ip,185.220.101.46,C2 server secondaire,MEDIUM,RED
+domain,update-secure.tk,Faux domaine C2,HIGH,RED
+domain,cdn-update-service.com,Domaine de staging,MEDIUM,AMBER
+mutex,Global\EncryptionMutex_v2,Mutex ransomware,HIGH,RED
+registry,HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Updater,Clé de persistence,HIGH,RED
+filename,Facture_2024_urgent.pdf.exe,Vecteur initial phishing,HIGH,AMBER
+filename,update_helper.exe,Binaire persistence,HIGH,RED
