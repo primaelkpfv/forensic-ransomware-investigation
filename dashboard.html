@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investigation Forensique - Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 40px; }
+        h1 { font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 5px solid #f5576c;
+        }
+        .card:hover { transform: translateY(-8px); }
+        .card h3 { color: #f5576c; margin-bottom: 12px; }
+        .badge { background: #f5576c; color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; margin-right: 8px; display: inline-block; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .close { float: right; font-size: 28px; cursor: pointer; color: #999; }
+        button {
+            background: #f5576c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f5576c; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔍 Investigation Forensique</h1>
+            <p style="font-size: 1.1em; opacity: 0.9; color: white;">Post-Intrusion Ransomware</p>
+        </header>
+
+        <div class="grid">
+            <div class="card" onclick="openModal('methodology')">
+                <h3>📋 Méthodologie PICERL</h3>
+                <p>Framework d'investigation complète.</p>
+                <div class="badge">Méthodologie</div>
+            </div>
+            <div class="card" onclick="openModal('tools')">
+                <h3>🛠️ Outils Utilisés</h3>
+                <p>FTK Imager, Autopsy, Volatility 3.</p>
+                <div class="badge">Forensique</div>
+            </div>
+            <div class="card" onclick="openModal('findings')">
+                <h3>🎯 Findings Clés</h3>
+                <p>Vecteur initial, comportement malware.</p>
+                <div class="badge">Résultats</div>
+            </div>
+        </div>
+
+        <div id="methodologyModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('methodology')">&times;</span>
+                <h2>📋 PICERL Framework</h2>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 12px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;"><strong>P</strong>réparer - Mise en place</li>
+                    <li style="padding: 12px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;"><strong>I</strong>dentifier - Reconnaissance</li>
+                    <li style="padding: 12px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;"><strong>C</strong>ontenir - Isolation</li>
+                    <li style="padding: 12px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;"><strong>E</strong>radiquer - Suppression</li>
+                    <li style="padding: 12px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;"><strong>R</strong>écupérer - Restauration</li>
+                    <li style="padding: 12px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;"><strong>L</strong>eçons - Amélioration</li>
+                </ul>
+                <button onclick="closeModal('methodology')">Fermer</button>
+            </div>
+        </div>
+
+        <div id="toolsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('tools')">&times;</span>
+                <h2>🛠️ Outils Forensiques</h2>
+                <table>
+                    <tr><th>Outil</th><th>Usage</th></tr>
+                    <tr><td>FTK Imager</td><td>Acquisition images disque (.E01)</td></tr>
+                    <tr><td>Autopsy</td><td>Analyse artefacts (MFT, registry)</td></tr>
+                    <tr><td>Volatility 3</td><td>Analyse mémoire</td></tr>
+                    <tr><td>Wireshark</td><td>Analyse trafic réseau</td></tr>
+                </table>
+                <button onclick="closeModal('tools')">Fermer</button>
+            </div>
+        </div>
+
+        <div id="findingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('findings')">&times;</span>
+                <h2>🎯 Findings Principaux</h2>
+                <h3 style="margin-top: 20px; color: #f5576c;">Vecteur Initial</h3>
+                <p>Email phishing avec pièce jointe : <code style="background: #f5f5f5; padding: 4px 8px; border-radius: 4px;">Facture_2024_urgent.pdf.exe</code></p>
+                
+                <h3 style="margin-top: 20px; color: #f5576c;">Comportement Ransomware</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;">1. Désactivation Windows Defender (T1562.001)</li>
+                    <li style="padding: 8px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;">2. Suppression Volume Shadow Copies (T1490)</li>
+                    <li style="padding: 8px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;">3. Chiffrement des fichiers (extension .locked)</li>
+                    <li style="padding: 8px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;">4. Mouvement latéral via SMB (T1021.002)</li>
+                    <li style="padding: 8px; background: #f5f5f5; margin: 8px 0; border-radius: 6px;">5. Exfiltration de données (T1041)</li>
+                </ul>
+
+                <h3 style="margin-top: 20px; color: #f5576c;">IOCs Identifiés</h3>
+                <table style="font-size: 0.9em;">
+                    <tr><th>Type</th><th>Valeur</th></tr>
+                    <tr><td>Hash MD5</td><td>a3f2c1d4...</td></tr>
+                    <tr><td>IP C2</td><td>185.220.101.45</td></tr>
+                    <tr><td>Domain</td><td>update-secure.tk</td></tr>
+                </table>
+
+                <button onclick="closeModal('findings')">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(type) {
+            document.getElementById(type + 'Modal').classList.add('active');
+        }
+        function closeModal(type) {
+            document.getElementById(type + 'Modal').classList.remove('active');
+        }
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
