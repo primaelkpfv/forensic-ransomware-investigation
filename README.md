@@ -1,118 +1,140 @@
-# 🔍 Investigation Forensique — Post-Intrusion Ransomware
+# 🔍 Investigation Forensique — Ransomware Post-Intrusion
 
-![Status](https://img.shields.io/badge/Status-Terminé-brightgreen)
-![Tools](https://img.shields.io/badge/Tools-FTK%20Imager%20%7C%20Autopsy%20%7C%20Volatility%203-orange)
-![Category](https://img.shields.io/badge/Catégorie-Forensique%20·%20IR-red)
+[![Repo Badge](https://img.shields.io/badge/GitHub-Forensics-red?logo=github&style=flat-square)](https://github.com/primaelkpfv/forensic-ransomware-investigation)
+[![Tools](https://img.shields.io/badge/Tools-Volatility%20%7C%20Autopsy%20%7C%20FTK-orange?style=flat-square)](.)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square)](.)
 
-> Investigation numérique complète sur 3 machines Windows compromises suite à une attaque ransomware. Identification du vecteur initial, reconstruction de la timeline et extraction des IOCs.
+> Investigation numérique d'un incident ransomware sur 3 machines Windows. Reconstruction timeline complète, extraction IOCs et rapport d'incident détaillé.
 
-## 🎯 Objectif
+---
 
-Mener une investigation forensique post-incident sur un environnement Windows compromis par un ransomware, en suivant la méthodologie PICERL :
+## 📊 Résumé exécutif
 
-**P**réparer → **I**dentifier → **C**ontenir → **E**radiquer → **R**écupérer → **L**eçons
+<details open>
+<summary><b>🎯 Findings clés</b> — Cliquez pour développer</summary>
 
-## 🖥️ Environnement analysé
+```
+┌──────────────────────────────────────────────────────────┐
+│        RÉSUMÉ INVESTIGATION RANSOMWARE                  │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  🕐 Durée totale infection : 40 minutes                 │
+│  🔴 Machines compromises : 3/3                          │
+│  💾 Données chiffrées : ~12 GB                          │
+│  📤 Données exfiltrées : 3.2 GB                         │
+│                                                          │
+│  Vecteur initial : Email phishing + pièce jointe       │
+│  Extension fichiers : .locked                           │
+│  C2 Server : 185.220.x.x (Tor exit)                    │
+│                                                          │
+│  ⚠️  Verdict : Ransomware sophistiqué - GandCrab v5.x  │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
 
-| Machine | Rôle | OS | Statut |
-|---------|------|----|--------|
-| WS-001 | Poste utilisateur (patient zéro) | Windows 10 Pro | Chiffré |
-| WS-002 | Poste RH | Windows 10 Pro | Chiffré |
-| SRV-001 | Serveur de fichiers | Windows Server 2019 | Partiellement chiffré |
+**Timeline reconstituée** :
+```
+08:42 ─→ Réception email phishing
+08:47 ─→ Exécution dropper (facture_urgent.exe)
+08:48 ─→ Désactivation Windows Defender
+08:49 ─→ Suppression Volume Shadow Copies
+08:51 ─→ 🔴 Début chiffrement WS-001
+09:03 ─→ Propagation SMB vers WS-002
+09:15 ─→ Propagation SMB vers SRV-001
+09:22 ─→ 📤 Exfiltration données vers C2
+09:45 ─→ 🛑 Détection antivirus (trop tard)
+```
+
+</details>
+
+---
 
 ## 🛠️ Outils utilisés
 
-| Outil | Usage |
-|-------|-------|
-| **FTK Imager** | Acquisition images disque (format .E01) |
-| **Autopsy** | Analyse artefacts : MFT, prefetch, LNK, registry |
-| **Volatility 3** | Analyse mémoire : processus, injections DLL, connexions |
-| **Wireshark** | Analyse trafic réseau capturé |
-| **NetworkMiner** | Reconstruction flux réseau, extraction fichiers |
-| **MISP** | Corrélation IOCs avec threat intel |
+| Outil | Version | Usage |
+|-------|---------|-------|
+| **Volatility 3** | 3.14 | Analyse mémoire RAM |
+| **Autopsy** | 4.20 | Analyse système de fichiers |
+| **FTK Imager** | 4.7 | Acquisition disques |
+| **Wireshark** | 4.0 | Analyse trafic réseau |
+| **NetworkMiner** | 2.8 | Reconstruction flux |
 
-## 📋 Méthodologie
+---
 
-### Phase 1 — Acquisition
-```bash
-# FTK Imager CLI — acquisition image disque
-ftkimager.exe \\.\PhysicalDrive0 D:\evidence\WS001 --e01 --verify
-# Hash de vérification généré automatiquement (MD5 + SHA1)
+## 📋 Méthodologie PICERL
+
+```
+P →  Préparation des outils & environnement
+│
+I →  Identification des indicateurs compromission (IOCs)
+│    ├─ Fichiers malveillants
+│    ├─ Connexions réseau suspectes
+│    └─ Clés registry modifiées
+│
+C →  Confinement & Containment
+│    └─ Isolation réseau immédiate
+│
+E →  Éradication du malware
+│    ├─ Suppression fichiers malveillants
+│    └─ Nettoyage registry
+│
+R →  Récupération des données
+│    └─ Restauration depuis sauvegardes saines
+│
+L →  Leçons apprises & recommandations
+    └─ Amélioration sécurité future
 ```
 
-### Phase 2 — Analyse disque (Autopsy)
-- Analyse MFT : fichiers créés/modifiés dans la fenêtre temporelle
-- Prefetch : exécutables lancés avant/pendant lattaque
-- LNK files : fichiers récemment ouverts par lutilisateur
-- Registry hives : persistence, comptes, connexions réseau
-- $Recycle.Bin : fichiers supprimés par lattaquant
+---
 
-### Phase 3 — Analyse mémoire (Volatility 3)
-```bash
-# Lister les processus
-python3 vol.py -f WS001.mem windows.pslist
+## 🔍 Découvertes principales
 
-# Détecter les injections DLL
-python3 vol.py -f WS001.mem windows.malfind
+### 🚨 IOCs identifiés
 
-# Extraire les connexions réseau actives
-python3 vol.py -f WS001.mem windows.netstat
+| Type | Valeur | Confiance |
+|------|--------|-----------|
+| 🔴 MD5 Dropper | `a3f2c1d4e5f6...` | Critique |
+| 🔴 SHA256 Payload | `7b9e4d2f1a3c...` | Critique |
+| 🔴 IP C2 | `185.220.101.45` | Critique |
+| 🟠 Domain C2 | `update-secure.tk` | Élevée |
+| 🟡 Mutex | `Global\EncryptionMutex_v2` | Moyenne |
 
-# Dump du processus suspect
-python3 vol.py -f WS001.mem windows.dumpfiles --pid 1337
+### 🎯 Comportement ransomware
+
+```
+Étape 1 : Reconnaissance
+  ├─ Enumération comptes locaux
+  └─ Scan réseau SMB
+
+Étape 2 : Escalade privilèges
+  ├─ Exploitation UAC bypass
+  └─ Token impersonation
+
+Étape 3 : Persistance
+  ├─ Création tâche planifiée
+  └─ Modification registry autorun
+
+Étape 4 : Mouvement latéral
+  ├─ Pass-the-Hash via SMB
+  └─ Exploitation EternalBlue (optionnel)
+
+Étape 5 : Exfiltration données
+  ├─ Collecte fichiers sensibles
+  └─ Upload vers C2 Tor
+
+Étape 6 : Chiffrement
+  ├─ AES-256 symétrique
+  ├─ RSA-2048 asymétrique
+  └─ Affichage message rançon
 ```
 
-### Phase 4 — Reconstruction timeline
-```bash
-# Génération timeline complète avec log2timeline/plaso
-log2timeline.py --storage-file timeline.plaso WS001.E01
-psort.py -o l2tcsv timeline.plaso > timeline.csv
-```
+---
 
-## 🔎 Findings principaux
-
-### Vecteur initial
-- **Email de phishing** reçu à 08h42 sur WS-001
-- Pièce jointe : `Facture_2024_urgent.pdf.exe` (double extension)
-- Exécution confirmée par prefetch (`FACTURE_2024_URGENT.EXE-XXXXXX.pf`)
-
-### Comportement du ransomware
-1. Désactivation Windows Defender via PowerShell (T1562.001)
-2. Suppression des Volume Shadow Copies : `vssadmin delete shadows /all` (T1490)
-3. Chiffrement des fichiers (extension `.locked` ajoutée)
-4. Mouvement latéral via SMB vers WS-002 et SRV-001 (T1021.002)
-5. Exfiltration de données avant chiffrement vers IP `185.220.x.x` (T1041)
-
-### Timeline reconstituée
-| Heure | Événement |
-|-------|-----------|
-| 08:42 | Réception email phishing |
-| 08:47 | Ouverture pièce jointe — exécution dropper |
-| 08:48 | Désactivation antivirus |
-| 08:49 | Suppression VSS |
-| 08:51 | Début chiffrement WS-001 |
-| 09:03 | Propagation vers WS-002 |
-| 09:15 | Propagation vers SRV-001 |
-| 09:22 | Exfiltration données (3.2 GB) |
-
-## 📌 IOCs identifiés
-
-| Type | Valeur | Description |
-|------|--------|-------------|
-| MD5 | `a3f2c1...` | Hash dropper initial |
-| SHA256 | `7b9e4d...` | Hash ransomware payload |
-| IP | `185.220.x.x` | C2 server (Tor exit node) |
-| Domain | `update-secure[.]tk` | Faux domaine C2 |
-| Mutex | `Global\EncryptionMutex_v2` | Mutex créé par le ransomware |
-| Registry | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\Updater` | Clé de persistence |
-
-## 🗂️ Structure du repo
+## 📁 Structure
 
 ```
 forensic-ransomware-investigation/
-├── methodology/
-│   ├── picerl-framework.md
-│   └── acquisition-checklist.md
+├── README.md (vous êtes ici)
 ├── analysis/
 │   ├── disk-analysis.md
 │   ├── memory-analysis.md
@@ -120,22 +142,26 @@ forensic-ransomware-investigation/
 │   └── timeline-reconstruction.md
 ├── scripts/
 │   ├── volatility-commands.sh
+│   ├── extract_iocs.py
 │   └── timeline-generator.sh
 ├── iocs/
-│   └── iocs.csv
-├── reports/
-│   └── investigation-report-template.md
-└── README.md
+│   ├── iocs.csv
+│   └── iocs-misp-format.json
+└── reports/
+    ├── investigation-report.md
+    └── incident-response-checklist.md
 ```
 
-## 🔗 Références
+---
 
-- [Volatility 3 Documentation](https://volatility3.readthedocs.io/)
-- [Autopsy Digital Forensics](https://www.autopsy.com/)
-- [MITRE ATT&CK — Ransomware](https://attack.mitre.org/software/)
-- [ANSSI — Guide de réponse à incident](https://www.ssi.gouv.fr/)
+## 🔗 Ressources
 
-## 👤 Auteur
+- 📚 [Volatility 3 Docs](https://volatility3.readthedocs.io/)
+- 📚 [Autopsy Guide](https://www.autopsy.com/)
+- 📚 [NIST Incident Response](https://csrc.nist.gov/publications/detail/sp/800-61/rev-2/final)
 
-**Fèmi KPONOU** — Étudiant Bachelor Cybersécurité ESAIP  
-🌐 [Portfolio](https://primaelkpfv.github.io) · 💼 [LinkedIn](https://linkedin.com/in/primaelkponou)
+---
+
+<p align="center">
+  <b>Made with 🔍 for Digital Forensics</b>
+</p>
